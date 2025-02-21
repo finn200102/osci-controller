@@ -41,7 +41,7 @@ def plot_data(data):
 
 def main():
     # Connect to the oscilloscope
-    scope_ip = "192.168.1.1"  # Replace with your scope's IP address
+    scope_ip = "192.168.0.90"
     connect_to_scope(scope_ip)
     
     # Get data from channel 1
