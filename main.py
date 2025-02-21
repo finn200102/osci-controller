@@ -25,6 +25,13 @@ class TriggerConfig(BaseModel):
     level: float
     mode: str = "SING"
 
+class TimebaseConfig(BaseModel):
+    scale: float  # seconds/div
+    offset: float = 0.0  # seconds from center
+
+class AcquisitionConfig(BaseModel):
+    points: int  # memory depth points
+
 @app.post("/connect")
 async def connect_oscilloscope(request: ConnectRequest):  # Changed to use request body
     global osci_connection
@@ -75,6 +82,36 @@ async def get_trigger_status():
     try:
         status = osci_connection.query(':TRIG:STAT?').strip()
         return {"status": status}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.post("/timebase")
+async def configure_timebase(config: TimebaseConfig):
+    global osci_connection
+    if not osci_connection:
+        raise HTTPException(status_code=400, detail="Oscilloscope not connected")
+    try:
+        osci_connection.write(f':TIMebase:MAIN:SCALe {config.scale}')
+        osci_connection.write(f':TIMebase:MAIN:OFFSet {config.offset}')
+        return {
+            "status": "success",
+            "scale": config.scale,
+            "offset": config.offset
+        }
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.post("/acquisition")
+async def configure_acquisition(config: AcquisitionConfig):
+    global osci_connection
+    if not osci_connection:
+        raise HTTPException(status_code=400, detail="Oscilloscope not connected")
+    try:
+        osci_connection.write(f':ACQuire:MDEPth {config.points}')
+        return {
+            "status": "success",
+            "points": config.points
+        }
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
