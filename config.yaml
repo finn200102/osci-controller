@@ -23,4 +23,12 @@ channels:
 trigger:
   source: 1  # Trigger on channel 1
   level: 8.0  # Changed from 0.5 to 8.0V
-  mode: "SING" 
+  mode: "SING"
+
+# New configurations
+timebase:
+  scale: 0.001  # 1ms/div
+  offset: 0.0   # No offset from center
+
+acquisition:
+  points: 1000000  # 1M points memory depth 

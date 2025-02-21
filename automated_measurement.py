@@ -43,23 +43,33 @@ class OscilloscopeMeasurement:
         response.raise_for_status()
         return response.json()
 
-    def configure_channels(self):
+    def configure_scope(self):
+        # Configure channels
         for channel in self.config['channels']:
             response = requests.post(
-                f"{self.base_url}/channel/{channel['number']}",
-                json={
-                    "channel": channel['number'],
-                    "scale": channel['scale'],
-                    "coupling": channel['coupling'],
-                    "display": channel['display']
-                }
+                f"{self.base_url}/channel/{channel['number']}", 
+                json=channel
             )
             response.raise_for_status()
 
-    def configure_trigger(self):
+        # Configure trigger
         response = requests.post(
             f"{self.base_url}/trigger",
             json=self.config['trigger']
+        )
+        response.raise_for_status()
+
+        # Configure timebase
+        response = requests.post(
+            f"{self.base_url}/timebase",
+            json=self.config['timebase']
+        )
+        response.raise_for_status()
+
+        # Configure acquisition
+        response = requests.post(
+            f"{self.base_url}/acquisition",
+            json=self.config['acquisition']
         )
         response.raise_for_status()
 
@@ -108,10 +118,7 @@ class OscilloscopeMeasurement:
             self.connect_scope()
             
             print("Configuring channels...")
-            self.configure_channels()
-            
-            print("Configuring trigger...")
-            self.configure_trigger()
+            self.configure_scope()
             
             print("Starting captures...")
             for capture_num in range(self.config['measurement']['captures']):
@@ -123,9 +130,6 @@ class OscilloscopeMeasurement:
                 
                 # Wait for specified interval
                 time.sleep(self.config['measurement']['interval'])
-                
-                # Reconfigure trigger for next capture
-                self.configure_trigger()
             
             print("Saving configuration...")
             self.save_config()
