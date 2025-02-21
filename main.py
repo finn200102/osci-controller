@@ -99,5 +99,17 @@ async def get_channel_data(channel_id: int, points: Optional[str] = "max"):
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
+@app.post("/disconnect")
+async def disconnect_oscilloscope():
+    global osci_connection
+    if not osci_connection:
+        raise HTTPException(status_code=400, detail="Oscilloscope not connected")
+    try:
+        osci_connection.close()
+        osci_connection = None
+        return {"status": "disconnected"}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
 if __name__ == "__main__":
     uvicorn.run(app, host="0.0.0.0", port=8000)
