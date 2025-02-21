@@ -1,0 +1,26 @@
+oscilloscope:
+  ip_address: "192.168.0.90"
+  save_path: "./measurements"
+
+measurement:
+  captures: 10
+  interval: 1.0  # seconds between captures
+
+channels:
+  - number: 1
+    scale: 100.0  # Maximum scale 100V
+    coupling: "DC"
+    display: true
+  - number: 2
+    scale: 100.0  # Maximum scale 100V
+    coupling: "DC"
+    display: true
+  - number: 3
+    scale: 10.0   # Maximum scale 10V
+    coupling: "DC"
+    display: true
+
+trigger:
+  source: 1  # Trigger on channel 1
+  level: 0.5
+  mode: "SING" 
