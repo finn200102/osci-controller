@@ -57,10 +57,10 @@ class OscilloscopeMeasurement:
             )
             response.raise_for_status()
 
-        # Configure trigger
+        # Configure acquisition first (before trigger)
         response = requests.post(
-            f"{self.base_url}/trigger",
-            json=self.config['trigger']
+            f"{self.base_url}/acquisition",
+            json=self.config['acquisition']
         )
         response.raise_for_status()
 
@@ -71,10 +71,10 @@ class OscilloscopeMeasurement:
         )
         response.raise_for_status()
 
-        # Configure acquisition
+        # Configure trigger last
         response = requests.post(
-            f"{self.base_url}/acquisition",
-            json=self.config['acquisition']
+            f"{self.base_url}/trigger",
+            json=self.config['trigger']
         )
         response.raise_for_status()
 
@@ -88,12 +88,27 @@ class OscilloscopeMeasurement:
 
     def save_capture(self, capture_num):
         # Save data for each configured channel
-        capture_data = {}
+        capture_data = {
+            "timestamp": datetime.now().isoformat(),
+            "channels": {}
+        }
         
         for channel in self.config['channels']:
-            response = requests.get(f"{self.base_url}/data/{channel['number']}")
-            response.raise_for_status()
-            capture_data[f"channel_{channel['number']}"] = response.json()
+            if channel['display']:  # Only capture enabled channels
+                try:
+                    response = requests.get(
+                        f"{self.base_url}/data/{channel['number']}",
+                        params={"points": self.config['acquisition']['points']}
+                    )
+                    response.raise_for_status()
+                    capture_data["channels"][f"channel_{channel['number']}"] = {
+                        "data": response.json()['data'],
+                        "time_step": response.json()['time_step'],
+                        "scale": channel['scale'],
+                        "coupling": channel['coupling']
+                    }
+                except Exception as e:
+                    print(f"Warning: Failed to capture channel {channel['number']}: {str(e)}")
 
         # Save capture data
         data_file = self.current_measurement_path / "data" / f"capture_{capture_num:04d}.json"
@@ -122,21 +137,28 @@ class OscilloscopeMeasurement:
             print("Connecting to oscilloscope...")
             self.connect_scope()
             
-            print("Configuring channels...")
+            # Validate channel configuration
+            enabled_channels = [ch for ch in self.config['channels'] if ch['display']]
+            if not enabled_channels:
+                raise ValueError("No channels are enabled in the configuration")
+            print(f"Configured channels: {[ch['number'] for ch in enabled_channels]}")
+            
+            print("Configuring scope...")
             self.configure_scope()
             
             print("Starting captures...")
             for capture_num in range(self.config['measurement']['captures']):
-                print(f"Waiting for trigger {capture_num + 1}/{self.config['measurement']['captures']}...")
+                print(f"\nCapture {capture_num + 1}/{self.config['measurement']['captures']}...")
                 self.wait_for_trigger()
                 
                 print("Saving capture data...")
                 self.save_capture(capture_num)
                 
                 # Wait for specified interval
-                time.sleep(self.config['measurement']['interval'])
+                if capture_num < self.config['measurement']['captures'] - 1:  # Don't wait after last capture
+                    time.sleep(self.config['measurement']['interval'])
             
-            print("Saving configuration...")
+            print("\nSaving configuration...")
             self.save_config()
             
         finally:
