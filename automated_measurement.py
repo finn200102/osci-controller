@@ -87,12 +87,17 @@ class OscilloscopeMeasurement:
             time.sleep(0.1)
 
     def save_capture(self, capture_num):
-        # Save data for each configured channel
-        capture_data = {
+        # Create a metadata dictionary
+        metadata = {
             "timestamp": datetime.now().isoformat(),
             "channels": {}
         }
         
+        # Dictionary to store data for all channels
+        all_channel_data = {}
+        max_points = 0
+        
+        # First collect all data and metadata
         for channel in self.config['channels']:
             if channel['display']:  # Only capture enabled channels
                 try:
@@ -101,19 +106,45 @@ class OscilloscopeMeasurement:
                         params={"points": self.config['acquisition']['points']}
                     )
                     response.raise_for_status()
-                    capture_data["channels"][f"channel_{channel['number']}"] = {
-                        "data": response.json()['data'],
-                        "time_step": response.json()['time_step'],
+                    response_data = response.json()
+                    
+                    # Store channel metadata
+                    metadata["channels"][f"channel_{channel['number']}"] = {
+                        "time_step": response_data['time_step'],
                         "scale": channel['scale'],
                         "coupling": channel['coupling']
                     }
+                    
+                    # Store channel data
+                    all_channel_data[channel['number']] = response_data['data']
+                    max_points = max(max_points, len(response_data['data']))
+                    
                 except Exception as e:
                     print(f"Warning: Failed to capture channel {channel['number']}: {str(e)}")
-
-        # Save capture data
-        data_file = self.current_measurement_path / "data" / f"capture_{capture_num:04d}.json"
-        with open(data_file, 'w') as f:
-            json.dump(capture_data, f, indent=2)
+        
+        # Save metadata to JSON
+        metadata_file = self.current_measurement_path / "data" / f"capture_{capture_num:04d}_metadata.json"
+        with open(metadata_file, 'w') as f:
+            json.dump(metadata, f, indent=2)
+        
+        # Save waveform data to CSV
+        csv_file = self.current_measurement_path / "data" / f"capture_{capture_num:04d}.csv"
+        with open(csv_file, 'w') as f:
+            # Write header
+            header = ['Time']
+            for channel_num in sorted(all_channel_data.keys()):
+                header.append(f'Channel_{channel_num}')
+            f.write(','.join(header) + '\n')
+            
+            # Write data rows
+            time_step = metadata["channels"]["channel_1"]["time_step"]  # Use first channel's time step
+            for i in range(max_points):
+                row = [f"{i * time_step:.9e}"]  # Time in seconds
+                for channel_num in sorted(all_channel_data.keys()):
+                    data = all_channel_data[channel_num]
+                    value = data[i] if i < len(data) else ''
+                    row.append(f"{value:.6e}" if value != '' else '')
+                f.write(','.join(row) + '\n')
 
     def save_config(self):
         # Save configuration and metadata
