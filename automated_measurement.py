@@ -48,7 +48,12 @@ class OscilloscopeMeasurement:
         for channel in self.config['channels']:
             response = requests.post(
                 f"{self.base_url}/channel/{channel['number']}", 
-                json=channel
+                json={
+                    "channel": channel['number'],
+                    "scale": channel['scale'],
+                    "coupling": channel['coupling'],
+                    "display": channel['display']
+                }
             )
             response.raise_for_status()
 
