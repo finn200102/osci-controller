@@ -18,10 +18,19 @@ class OscilloscopeMeasurement:
         # Create base folder structure
         base_path = Path(self.config['oscilloscope']['save_path'])
         date_folder = base_path / datetime.now().strftime("%Y-%m-%d")
+        date_folder.mkdir(parents=True, exist_ok=True)
         
-        # Create measurement subfolder with just the date
-        self.current_measurement_path = date_folder
-        self.current_measurement_path.mkdir(parents=True, exist_ok=True)
+        # Find the next available run number
+        existing_runs = [d for d in date_folder.glob('run_*') if d.is_dir()]
+        if not existing_runs:
+            next_run = 1
+        else:
+            run_numbers = [int(run.name.split('_')[1]) for run in existing_runs]
+            next_run = max(run_numbers) + 1
+        
+        # Create run subfolder
+        self.current_measurement_path = date_folder / f"run_{next_run:03d}"
+        self.current_measurement_path.mkdir(exist_ok=True)
         
         # Create data subfolder
         (self.current_measurement_path / "data").mkdir(exist_ok=True)
