@@ -19,9 +19,8 @@ class OscilloscopeMeasurement:
         base_path = Path(self.config['oscilloscope']['save_path'])
         date_folder = base_path / datetime.now().strftime("%Y-%m-%d")
         
-        # Create measurement subfolder with timestamp
-        timestamp = datetime.now().strftime("%H-%M-%S")
-        self.current_measurement_path = date_folder / f"measurement_{timestamp}"
+        # Create measurement subfolder with just the date
+        self.current_measurement_path = date_folder
         self.current_measurement_path.mkdir(parents=True, exist_ok=True)
         
         # Create data subfolder

@@ -22,5 +22,5 @@ channels:
 
 trigger:
   source: 1  # Trigger on channel 1
-  level: 0.5
+  level: 8.0  # Changed from 0.5 to 8.0V
   mode: "SING" 
