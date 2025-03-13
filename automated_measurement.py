@@ -79,6 +79,11 @@ class OscilloscopeMeasurement:
         response.raise_for_status()
 
     def wait_for_trigger(self):
+        # First, re-arm the trigger
+        requests.post(
+            f"{self.base_url}/trigger",
+            json=self.config['trigger']
+        )
         while True:
             response = requests.get(f"{self.base_url}/trigger/status")
             status = response.json()['status']
