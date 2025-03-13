@@ -12,6 +12,7 @@ class OscilloscopeMeasurement:
             self.config = yaml.safe_load(f)
         
         self.base_url = "http://localhost:8000"
+        self.pressure_url = "http://localhost:8001"
         self.current_measurement_path = None
 
     def setup_folders(self):
@@ -42,6 +43,32 @@ class OscilloscopeMeasurement:
         )
         response.raise_for_status()
         return response.json()
+    
+    def connect_pressure_device(self):
+        try:
+            response = requests.post(
+                f"{self.pressure_url}/connect",
+                json={
+                    "port": self.config.get('pressure', {}).get('port', "/dev/ttyS0"),
+                    "baudrate": self.config.get('pressure', {}).get('baudrate', 9600)
+                }
+            )
+            response.raise_for_status()
+            return response.json()
+        except Exception as e:
+            print(f"Warning: Failed to connect to pressure device: {str(e)}")
+            return None
+        
+
+    def get_pressure_reading(self):
+        try:
+            response = requests.get(f"{self.pressure_url}/pressure")
+            response.raise_for_status()
+            return response.json()
+        except Exception as e:
+            print(f"Warning: Failed to get pressure reading: {str(e)}")
+            return None
+
 
     def configure_scope(self):
         # Configure channels
@@ -97,6 +124,11 @@ class OscilloscopeMeasurement:
             "timestamp": datetime.now().isoformat(),
             "channels": {}
         }
+
+        # Get pressure reading for this capture
+        pressure_data = self.get_pressure_reading()
+        if pressure_data:
+            metadata["pressure"] = pressure_data
         
         # Dictionary to store data for all channels
         all_channel_data = {}
@@ -152,11 +184,18 @@ class OscilloscopeMeasurement:
                 f.write(','.join(row) + '\n')
 
     def save_config(self):
+        # Get final pressure reading for the measurement series
+        pressure_data = self.get_pressure_reading()
         # Save configuration and metadata
         metadata = {
             "timestamp": datetime.now().isoformat(),
             "configuration": self.config,
         }
+
+        # Add pressure data to the README
+        if pressure_data:
+            metadata["pressure"] = pressure_data
+
         
         readme_file = self.current_measurement_path / "README.json"
         with open(readme_file, 'w') as f:
@@ -165,6 +204,13 @@ class OscilloscopeMeasurement:
     def disconnect_scope(self):
         requests.post(f"{self.base_url}/disconnect")
 
+    def disconnect_pressure_device(self):
+        try:
+            requests.post(f"{self.pressure_url}/disconnect")
+        except Exception as e:
+            print(f"Warning: Failed to disconnect pressure device: {str(e)}")
+
+
     def run_measurement(self):
         try:
             print("Setting up measurement folders...")
@@ -172,6 +218,9 @@ class OscilloscopeMeasurement:
             
             print("Connecting to oscilloscope...")
             self.connect_scope()
+
+            print("Connecting to pressure device...")
+            self.connect_pressure_device()
             
             # Validate channel configuration
             enabled_channels = [ch for ch in self.config['channels'] if ch['display']]
@@ -200,6 +249,9 @@ class OscilloscopeMeasurement:
         finally:
             print("Disconnecting from oscilloscope...")
             self.disconnect_scope()
+
+            print("Disconnecting from pressure device...")
+            self.disconnect_pressure_device()
 
 if __name__ == "__main__":
     measurement = OscilloscopeMeasurement("config.yaml")
