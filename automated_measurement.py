@@ -133,6 +133,7 @@ class OscilloscopeMeasurement:
         # Dictionary to store data for all channels
         all_channel_data = {}
         max_points = 0
+        time_step = None
         
         # First collect all data and metadata
         for channel in self.config['channels']:
