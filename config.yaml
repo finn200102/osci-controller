@@ -5,6 +5,7 @@ oscilloscope:
 measurement:
   captures: 10
   interval: 1.0  # seconds between captures
+  gap: 2.5       # gap of the current setup in mm
 
 channels:
   - number: 1

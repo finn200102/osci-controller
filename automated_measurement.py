@@ -35,6 +35,21 @@ class OscilloscopeMeasurement:
         
         # Create data subfolder
         (self.current_measurement_path / "data").mkdir(exist_ok=True)
+        
+        # Save gap information to a JSON file
+        self.save_gap_info()
+
+    def save_gap_info(self):
+        """Save the gap information to a JSON file in the run folder."""
+        if self.current_measurement_path:
+            gap_info = {
+                "timestamp": datetime.now().isoformat(),
+                "gap": self.config.get('measurement', {}).get('gap', 'Not specified')
+            }
+            
+            gap_file = self.current_measurement_path / "gap_info.json"
+            with open(gap_file, 'w') as f:
+                json.dump(gap_info, f, indent=2)
 
     def connect_scope(self):
         response = requests.post(
@@ -197,6 +212,9 @@ class OscilloscopeMeasurement:
         if pressure_data:
             metadata["pressure"] = pressure_data
 
+        # Add gap information to the README
+        if 'measurement' in self.config and 'gap' in self.config['measurement']:
+            metadata["gap"] = self.config['measurement']['gap']
         
         readme_file = self.current_measurement_path / "README.json"
         with open(readme_file, 'w') as f:
