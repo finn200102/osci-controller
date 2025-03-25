@@ -1,0 +1,47 @@
+oscilloscope:
+  ip_address: "192.168.0.90"
+  save_path: "./measurements"
+
+measurement:
+  captures: 10
+  interval: 1.0  # seconds between captures
+  gap: 2.5       # gap of the current setup in mm
+
+channels:
+  - number: 1
+    scale: 100.0  # Maximum scale 100V
+    coupling: "DC"
+    display: true
+  - number: 2
+    scale: 100.0  # Maximum scale 100V
+    coupling: "DC"
+    display: true
+  - number: 3
+    scale: 10.0   # Maximum scale 10V
+    coupling: "DC"
+    display: true
+  - number: 4
+    scale: 2.0
+    coupling: "DC"
+    display: true
+
+trigger:
+  source: 1  # Trigger on channel 1
+  level: 8.0  # Trigger level at 8.0V
+  mode: "SING"
+
+# Base timebase configuration (will be overridden by each run)
+timebase:
+  offset: 0.0   # No offset from center
+
+acquisition:
+  points: 1000000  # 1M points memory depth
+
+# List of timebase settings to run as separate measurements
+timebase_runs:
+  - scale: 0.001   # 1ms/div
+    description: "Fast capture"
+  - scale: 0.01    # 10ms/div
+    description: "Medium capture"
+  - scale: 0.1     # 100ms/div
+    description: "Slow capture" 
