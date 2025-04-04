@@ -79,7 +79,18 @@ class OscilloscopeMeasurement:
         try:
             response = requests.get(f"{self.pressure_url}/pressure")
             response.raise_for_status()
-            return response.json()
+            data = response.json()
+            
+            # Parse the pressure string "0, 1.0500E-01" into a numeric value
+            if data['pressure'] and isinstance(data['pressure'], str):
+                # Split by comma and take the second value if it exists
+                pressure_parts = data['pressure'].split(',')
+                if len(pressure_parts) > 1:
+                    # Convert scientific notation to float
+                    pressure_value = float(pressure_parts[1].strip())
+                    data['pressure'] = pressure_value
+            
+            return data
         except Exception as e:
             print(f"Warning: Failed to get pressure reading: {str(e)}")
             return None

@@ -1,6 +1,6 @@
 oscilloscope:
   ip_address: "192.168.0.90"
-  save_path: "./measurements"
+  save_path: "/mnt/data/measurements/"
 
 measurement:
   captures: 10
