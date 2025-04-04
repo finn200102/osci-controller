@@ -48,6 +48,12 @@ async def connect_pressure_device(request: ConnectRequest):
         if pressure_connection.bytes_in_buffer > 0:
             pressure_connection.read_bytes(pressure_connection.bytes_in_buffer)
 
+        # Set units to mbar after connection
+        pressure_connection.write("UNI,1")
+        time.sleep(0.2)
+        if pressure_connection.bytes_in_buffer > 0:
+            ack = pressure_connection.read_bytes(pressure_connection.bytes_in_buffer)
+
         return {"status": "connected", "device": f"Pressure device at {request.port}"}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
@@ -96,9 +102,20 @@ async def get_pressure():
             pressure_data = pressure_connection.read_bytes(pressure_connection.bytes_in_buffer)
             pressure_data = pressure_data.decode('ascii', errors='replace').strip()
 
+        # Parse the pressure data
+        if pressure_data:
+            parts = pressure_data.split(',')
+            if len(parts) >= 2:
+                pressure_value = float(parts[1].strip())
+            else:
+                pressure_value = pressure_data
+        else:
+            pressure_value = None
+
         return {
             "timestamp": datetime.now().isoformat(),
-            "pressure": pressure_data
+            "pressure": pressure_value,
+            "units": "mbar"
         }
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
