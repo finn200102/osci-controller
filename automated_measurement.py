@@ -245,6 +245,9 @@ class OscilloscopeMeasurement:
             print("Setting up measurement folders...")
             self.setup_folders()
             
+            print("Saving initial configuration...")
+            self.save_config()
+            
             print("Connecting to oscilloscope...")
             self.connect_scope()
 
@@ -271,9 +274,6 @@ class OscilloscopeMeasurement:
                 # Wait for specified interval
                 if capture_num < self.config['measurement']['captures'] - 1:  # Don't wait after last capture
                     time.sleep(self.config['measurement']['interval'])
-            
-            print("\nSaving configuration...")
-            self.save_config()
             
         finally:
             print("Disconnecting from oscilloscope...")
