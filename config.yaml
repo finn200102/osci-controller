@@ -33,3 +33,5 @@ timebase:
 
 acquisition:
   points: 1000000  # 1M points memory depth 
+
+experiment: 1 # Experiment setup number 

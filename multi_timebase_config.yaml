@@ -45,3 +45,5 @@ timebase_runs:
     description: "Medium capture"
   - scale: 0.1     # 100ms/div
     description: "Slow capture" 
+
+experiment: 1 # Experiment setup number 
