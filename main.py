@@ -83,7 +83,7 @@ async def get_trigger_status():
         status = osci_connection.query(':TRIG:STAT?').strip()
         return {"status": status}
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail=f"Error getting trigger status: {str(e)}")
 
 @app.post("/timebase")
 async def configure_timebase(config: TimebaseConfig):

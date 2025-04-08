@@ -5,11 +5,11 @@ oscilloscope:
 measurement:
   captures: 10
   interval: 1.0  # seconds between captures
-  gap: 2.5       # gap of the current setup in mm
+  gap: 6.0       # gap of the current setup in mm
 
 channels:
   - number: 1
-    scale: 100.0  # Maximum scale 100V
+    scale: 10.0  # Maximum scale 100V
     coupling: "DC"
     display: true
   - number: 2
@@ -23,15 +23,15 @@ channels:
 
 trigger:
   source: 1  # Trigger on channel 1
-  level: 8.0  # Changed from 0.5 to 8.0V
+  level: 1.6  # Changed from 0.5 to 8.0V
   mode: "SING"
 
 # New configurations
 timebase:
-  scale: 0.001  # 1ms/div
-  offset: 0.0   # No offset from center
+  scale: 0.000001  # 1ms/div
+  offset: 0.000003   # No offset from center
 
 acquisition:
-  points: 1000000  # 1M points memory depth 
+  points: 100000  # 1M points memory depth
 
-experiment: 1 # Experiment setup number 
+experiment: 4 # Experiment setup number 
