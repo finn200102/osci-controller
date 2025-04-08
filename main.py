@@ -83,7 +83,10 @@ async def get_trigger_status():
         status = osci_connection.query(':TRIG:STAT?').strip()
         return {"status": status}
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Error getting trigger status: {str(e)}")
+        if "socket.timeout" in str(e):
+            raise HTTPException(status_code=500, detail="Timeout error: Oscilloscope not responding. Check network connection and oscilloscope status.")
+        else:
+            raise HTTPException(status_code=500, detail=f"Error getting trigger status: {str(e)}")
 
 @app.post("/timebase")
 async def configure_timebase(config: TimebaseConfig):
@@ -146,7 +149,10 @@ async def disconnect_oscilloscope():
         osci_connection = None
         return {"status": "disconnected"}
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        if "socket.timeout" in str(e):
+            raise HTTPException(status_code=500, detail="Timeout error: Oscilloscope not responding. Check network connection and oscilloscope status.")
+        else:
+            raise HTTPException(status_code=500, detail=str(e))
 
 if __name__ == "__main__":
     uvicorn.run(app, host="0.0.0.0", port=8000)
