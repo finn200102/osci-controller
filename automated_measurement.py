@@ -226,10 +226,6 @@ class OscilloscopeMeasurement:
         if 'measurement' in self.config and 'gap' in self.config['measurement']:
             metadata["gap"] = self.config['measurement']['gap']
         
-        # Add experiment information to the README
-        if 'experiment' in self.config:
-            metadata["experiment"] = self.config['experiment']
-        
         readme_file = self.current_measurement_path / "README.json"
         with open(readme_file, 'w') as f:
             json.dump(metadata, f, indent=2)
